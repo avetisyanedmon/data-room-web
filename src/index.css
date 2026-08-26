@@ -1,0 +1,198 @@
+@import 'tailwindcss';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+/*
+ * Aegis Vault design tokens.
+ * Light app shell, dark document viewer, dark public share surface.
+ * Deliberately single-mode: the mockups are drawn light and every surface
+ * that is dark is dark on purpose, not because of an OS preference.
+ */
+@theme {
+  --color-vault-50: #f4f6f9;
+  --color-vault-100: #e8ecf2;
+  --color-vault-200: #d5dbe6;
+  --color-vault-300: #b8c2d4;
+  --color-vault-400: #94a3b8;
+  --color-vault-500: #64748b;
+  --color-vault-600: #475569;
+  --color-vault-700: #334155;
+  --color-vault-800: #1e293b;
+  --color-vault-900: #0a1128;
+
+  --color-accent: #6366f1;
+  --color-accent-strong: #4f46e5;
+  --color-accent-soft: #eef2ff;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --shadow-panel: 0 1px 2px rgba(10, 17, 40, 0.04), 0 8px 24px -16px rgba(10, 17, 40, 0.35);
+  --shadow-float: 0 20px 25px -5px rgba(10, 17, 40, 0.1), 0 10px 10px -5px rgba(10, 17, 40, 0.04);
+}
+
+/*
+ * These are element defaults, so they belong in the base layer. Left unlayered
+ * they outrank every Tailwind utility no matter how specific the utility is —
+ * `color: inherit` alone swallowed `text-white` on buttons and `text-accent`
+ * on links, and `font: inherit` swallowed every `text-*`/`font-*` size.
+ */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--color-vault-50);
+    color: var(--color-vault-900);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skeleton shimmer — Axiom 04 */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-vault-100) 25%,
+    var(--color-vault-200) 50%,
+    var(--color-vault-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Active upload bar — Axiom 05 */
+.progress-stripes {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: stripes 1s linear infinite;
+}
+
+@keyframes stripes {
+  from {
+    background-position: 1rem 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.2s ease-out both;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-overlay-in {
+  animation: overlay-in 0.15s ease-out both;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-vault-200);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-vault-300);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
