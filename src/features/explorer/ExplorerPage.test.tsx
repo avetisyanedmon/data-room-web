@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ExplorerPage } from './ExplorerPage';
 import { renderRoute } from '@/test/render';
 import { contents, room, stubApi } from '@/test/api-stub';
@@ -99,5 +100,82 @@ describe('ExplorerPage', () => {
     expect(await screen.findByText(/this data room is empty/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /upload files/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create folder/i })).toBeInTheDocument();
+  });
+
+  describe('keyboard shortcuts', () => {
+    it('opens the active row on Enter', async () => {
+      stubApi({ '/contents': contents('OWNER'), '/data-rooms/room-1': room });
+      renderExplorer();
+      const row = await screen.findByText('Merger_Agreement_v4.pdf');
+
+      // Arrange - selecting a row is what arming Enter looks like
+      await userEvent.click(row);
+
+      // Act / Assert - the explorer navigates away, so its list is gone
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() =>
+        expect(screen.queryByText('Merger_Agreement_v4.pdf')).not.toBeInTheDocument(),
+      );
+    });
+
+    it('does not act on Enter while a confirmation is open', async () => {
+      stubApi({ '/contents': contents('OWNER'), '/data-rooms/room-1': room });
+      renderExplorer();
+      const menu = await screen.findByRole('button', {
+        name: /actions for merger_agreement_v4/i,
+      });
+
+      // Arrange - opening the confirmation from the row's menu also marks the
+      // row active, which is what arms the list's own Enter handler
+      await userEvent.click(menu);
+      await userEvent.click(await screen.findByRole('menuitem', { name: /delete/i }));
+      const dialog = await screen.findByRole('dialog');
+      expect(dialog).toHaveTextContent('Delete "Merger_Agreement_v4.pdf"?');
+
+      // Act
+      await userEvent.keyboard('{Enter}');
+
+      // Assert - the explorer list is still mounted. The previous handler
+      // called preventDefault and navigated to the document, which both
+      // swallowed the focused button's activation and left the confirmation
+      // unanswered. Rows are counted through the DOM because Radix marks the
+      // page behind a modal aria-hidden, which role queries skip.
+      expect(document.querySelectorAll('[data-row-id]')).toHaveLength(2);
+    });
+
+    it('does not act on Enter while the rename dialog is open', async () => {
+      stubApi({ '/contents': contents('OWNER'), '/data-rooms/room-1': room });
+      renderExplorer();
+      await userEvent.click(
+        await screen.findByRole('button', { name: /actions for merger_agreement_v4/i }),
+      );
+      await userEvent.click(await screen.findByRole('menuitem', { name: /rename/i }));
+      await screen.findByRole('dialog');
+
+      // Act - Enter submits the rename form, not the row underneath
+      await userEvent.keyboard('{Enter}');
+
+      // Assert
+      expect(document.querySelectorAll('[data-row-id]')).toHaveLength(2);
+    });
+
+    it('does not open the search palette on top of a dialog', async () => {
+      stubApi({ '/contents': contents('OWNER'), '/data-rooms/room-1': room });
+      renderExplorer();
+      await userEvent.click(
+        await screen.findByRole('button', { name: /actions for merger_agreement_v4/i }),
+      );
+      await userEvent.click(await screen.findByRole('menuitem', { name: /rename/i }));
+      await screen.findByRole('dialog');
+
+      // Act
+      await userEvent.keyboard('{Meta>}k{/Meta}');
+
+      // Assert - one dialog, still the rename one
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+      expect(
+        screen.queryByPlaceholderText(/search folders and documents/i),
+      ).not.toBeInTheDocument();
+    });
   });
 });

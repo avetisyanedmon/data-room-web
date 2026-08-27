@@ -37,6 +37,7 @@ import { ExplorerSkeleton } from './ExplorerSkeleton';
 import { FileRow } from './FileRow';
 import { FolderRow } from './FolderRow';
 import { InlineCreateRow } from './InlineCreateRow';
+import { isOverlayOpen, isTextEntry } from './keyboard';
 import { ListFooter } from './ListFooter';
 import { MoveDialog } from './MoveDialog';
 import { RenameDialog } from './RenameDialog';
@@ -197,14 +198,17 @@ export function ExplorerPage() {
   // Keyboard: ⌘K opens search, arrows move the active row, Enter opens it.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // Anything open on top of the list owns the keyboard, including ⌘K —
+      // stacking the search palette over a confirmation is its own confusion.
+      if (isOverlayOpen()) return;
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         setSearchOpen(true);
         return;
       }
 
-      const target = event.target as HTMLElement | null;
-      if (target && ['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+      if (isTextEntry(event.target)) return;
       if (rows.length === 0) return;
 
       const current = rows.findIndex((row) => row.id === activeId);
