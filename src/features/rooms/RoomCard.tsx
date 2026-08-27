@@ -28,7 +28,7 @@ export function RoomCard({
         <span className="flex size-10 items-center justify-center rounded-lg bg-vault-900 text-white">
           <PiFolderSimpleFill className="text-lg" />
         </span>
-        <div className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+        <div className="relative z-10 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           <Menu
             trigger={
               <IconButton label={`Actions for ${room.name}`}>
