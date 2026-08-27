@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  PiArrowLeftBold,
   PiCaretRightBold,
   PiEyeBold,
   PiFilePdfFill,
@@ -17,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatBytes } from '@/lib/format';
+import { PublicBreadcrumbs } from './PublicBreadcrumbs';
 import { RevokedPage } from './RevokedPage';
 
 type PublicFile = { id: string; name: string; size: number; folderId: string };
@@ -66,7 +66,6 @@ export function PublicSharePage() {
   // Pages carry folders before files, so a later page can still be all folders.
   const folders = [...(contents?.folders ?? []), ...extraFolders];
   const files = [...(contents?.files ?? []), ...extraFiles];
-  const atEntry = !routeFolderId || routeFolderId === meta?.entryFolderId;
 
   const loadMore = async () => {
     if (!cursor || !folderId) return;
@@ -122,20 +121,12 @@ export function PublicSharePage() {
         <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-4">
             <div className="flex min-w-0 items-center gap-2 text-[13px]">
-              {atEntry ? (
-                <span className="truncate font-semibold">{contents?.folder.name ?? 'Documents'}</span>
+              {contents?.breadcrumb?.length ? (
+                <PublicBreadcrumbs token={token} items={contents.breadcrumb} />
               ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/share/${token}`)}
-                    className="flex items-center gap-1.5 text-white/50 transition-colors hover:text-white"
-                  >
-                    <PiArrowLeftBold className="text-[11px]" /> Top level
-                  </button>
-                  <PiCaretRightBold className="shrink-0 text-[9px] text-white/30" />
-                  <span className="truncate font-semibold">{contents?.folder.name}</span>
-                </>
+                <span className="truncate font-semibold">
+                  {contents?.folder.name ?? 'Documents'}
+                </span>
               )}
             </div>
             <p className="text-[11px] font-medium tracking-wider text-white/40 uppercase">

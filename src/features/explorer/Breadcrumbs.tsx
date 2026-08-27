@@ -3,12 +3,15 @@ import { PiCaretRightBold, PiDotsThreeBold, PiHouseFill } from 'react-icons/pi';
 import type { BreadcrumbDto } from '@/api/data-room-api-ts/types';
 import { Menu, MenuItem, MenuLabel } from '@/components/ui/Menu';
 import { IconButton } from '@/components/ui/Button';
-
-const VISIBLE_TAIL = 2;
+import { collapseTrail } from '@/lib/breadcrumb-trail';
 
 /**
- * Collapses the middle of a deep path into a menu — Axiom 03. The first
- * breadcrumb entry is the room root, which is rendered as a home icon.
+ * Collapses the middle of a deep path into a menu — Axiom 03.
+ *
+ * The first entry is the room root only for someone who can reach it. A share
+ * recipient's trail is trimmed server-side to the folder they were granted, so
+ * the lead crumb is that folder: it keeps its own name, and the home shortcut
+ * to the room is withheld, because opening the room root would be a 403.
  */
 export function Breadcrumbs({
   roomId,
@@ -20,15 +23,14 @@ export function Breadcrumbs({
   roomName: string;
 }) {
   const navigate = useNavigate();
-  const [root, ...rest] = items;
-  const collapsed = rest.length > VISIBLE_TAIL + 1;
-  const hidden = collapsed ? rest.slice(0, rest.length - VISIBLE_TAIL) : [];
-  const shown = collapsed ? rest.slice(rest.length - VISIBLE_TAIL) : rest;
+  const { lead, hidden, shown, collapsed } = collapseTrail(items);
 
-  const href = (id: string) => (id === root?.id ? `/rooms/${roomId}` : `/rooms/${roomId}/f/${id}`);
+  const href = (item: BreadcrumbDto) =>
+    item.parentId === null ? `/rooms/${roomId}` : `/rooms/${roomId}/f/${item.id}`;
 
-  return (
-    <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
+  // An absent lead means an empty trail, which only happens at the room root.
+  const leadNode =
+    !lead || lead.parentId === null ? (
       <Link
         to={`/rooms/${roomId}`}
         title={roomName}
@@ -37,6 +39,27 @@ export function Breadcrumbs({
         <PiHouseFill className="text-[13px]" />
         <span className="max-w-[10rem] truncate font-medium">{roomName}</span>
       </Link>
+    ) : shown.length === 0 ? (
+      <span
+        aria-current="page"
+        title={lead.name}
+        className="max-w-[16rem] truncate font-semibold text-vault-900"
+      >
+        {lead.name}
+      </span>
+    ) : (
+      <Link
+        to={href(lead)}
+        title={lead.name}
+        className="max-w-[10rem] shrink-0 truncate font-medium text-vault-500 transition-colors hover:text-vault-900"
+      >
+        {lead.name}
+      </Link>
+    );
+
+  return (
+    <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13px]">
+      {leadNode}
 
       {collapsed ? (
         <>
@@ -51,7 +74,7 @@ export function Breadcrumbs({
           >
             <MenuLabel>Skipped folders</MenuLabel>
             {hidden.map((item) => (
-              <MenuItem key={item.id} onSelect={() => navigate(href(item.id))}>
+              <MenuItem key={item.id} onSelect={() => navigate(href(item))}>
                 <span className="truncate">{item.name}</span>
               </MenuItem>
             ))}
@@ -74,7 +97,7 @@ export function Breadcrumbs({
               </span>
             ) : (
               <Link
-                to={href(item.id)}
+                to={href(item)}
                 title={item.name}
                 className="max-w-[10rem] truncate text-vault-500 transition-colors hover:text-vault-900"
               >

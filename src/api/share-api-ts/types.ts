@@ -1,3 +1,5 @@
+import type { BreadcrumbDto } from '../data-room-api-ts/types';
+
 export type ShareDto = {
   id: string;
   kind: 'USER' | 'PUBLIC_LINK';
@@ -28,6 +30,11 @@ export type PublicContentsDto = {
     id: string;
     name: string;
   };
+  /**
+   * Ancestors of the folder being viewed, ordered top-first and trimmed
+   * server-side to the shared scope — every entry is one this visitor may open.
+   */
+  breadcrumb: BreadcrumbDto[];
   folders: { id: string; name: string }[];
   files: { id: string; name: string; size: number; folderId: string }[];
   nextCursor: string | null;
